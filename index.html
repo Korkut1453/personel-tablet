@@ -165,7 +165,9 @@
       "MIT2026EEEE0044": "NEO",
       "MIT2026CCCC0055": "SARI",
       "MIT2026DDDD0066": "YILKIRAN",
-      "MIT2026AAAA0077": "ZÜMRÜD"
+      "MIT2026AAAA0077": "ZÜMRÜD",
+      "MIT2026HHHH0010": "Emniyet Genel Müdürlüğü",
+      "MIT2026IIII0011": "Adalet Bakanlığı"
     };
     const VALID_CODES = Object.keys(PERSONNEL);
     const RAPOR_WEBHOOK = "https://discord.com/api/webhooks/1457829355358261615/-uOZYjIN03dbE01uasvp0QK2bxujojEShfhrQX-bEAPFwpCebn9TdJYMgBipfMFf-3nX";
@@ -383,7 +385,15 @@ Sonuç:
     function profilGuncelle() {
       const ad = PERSONNEL[currentCode];
       document.getElementById('profil-ad').textContent = ad;
-      document.getElementById('profil-rutbe').textContent = isAdmin ? "Komuta Merkezi" : "Saha Mensubu";
+      let rutbe = "Saha Mensubu";
+      if (isAdmin) {
+        rutbe = "Komuta Merkezi";
+      } else if (currentCode === "MIT2026HHHH0010") {
+        rutbe = "Emniyet İletişim Hattı";
+      } else if (currentCode === "MIT2026IIII0011") {
+        rutbe = "Adli İletişim Hattı";
+      }
+      document.getElementById('profil-rutbe').textContent = rutbe;
       let stats = JSON.parse(localStorage.getItem('mitStats') || '{}');
       let ajanStats = stats[currentCode] || { rapor: 0, operasyon: 0 };
       ajanStats.rapor++;
