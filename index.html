@@ -37,7 +37,7 @@
     .content.active { display: block; }
     .login-container { max-width: 540px; margin: 15vh auto; background: white; padding: 4rem 3.5rem; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; }
     input, textarea, select { width: 100%; padding: 0.9rem 1.2rem; margin: 0.8rem 0; border: 1px solid var(--border); border-radius: 4px; font-size: 1rem; }
-    #access-password { font-family: monospace; letter-spacing: 8px; text-align: center; font-size: 2rem; padding: 1.2rem; border: 2px solid #003087; border-radius: 8px; }
+    #access-password { font-family: monospace; letter-spacing: 4px; text-align: center; font-size: 1.6rem; padding: 1.2rem; border: 2px solid #003087; border-radius: 8px; }
     button.primary { background: var(--mit-primary); color: white; border: none; padding: 1.2rem 2rem; border-radius: 4px; cursor: pointer; font-weight: 500; transition: background 0.3s; font-size: 1.2rem; width: 100%; }
     button.primary:hover { background: var(--mit-accent); }
     .profil-kart { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; background: linear-gradient(135deg, #f8f9fa, #e9f0ff); border: 2px solid var(--mit-primary); border-radius: 12px; padding: 2.5rem; margin-bottom: 3rem; box-shadow: 0 8px 30px rgba(0,48,135,0.15); }
@@ -53,7 +53,6 @@
   </style>
 </head>
 <body>
-
 <div class="app-container">
   <nav class="sidebar" id="sidebar">
     <h3>PERSONEL MENÜSÜ</h3>
@@ -77,6 +76,7 @@
     <div class="login-container" id="giris">
       <h1>PERSONEL GİRİŞİ</h1>
       <p style="color:#555; margin:2rem 0;">GİZLİLİK DERECESİ: ÇOK GİZLİ</p>
+      <input type="text" id="personel-kodadi" placeholder="KOD ADI (örn: KORKUT)" autocomplete="off" style="text-transform:uppercase;">
       <input type="password" id="access-password" placeholder="PERSONEL KODU" autocomplete="off">
       <button class="primary" id="giris-buton">GİRİŞ YAP</button>
       <p id="wrong-pass" style="color:var(--danger); display:none; margin-top:1.5rem; font-weight:bold;"></p>
@@ -87,8 +87,8 @@
         <h2>ANA PANEL</h2>
         <div class="profil-kart">
           <div>
-            <h3>KORKUT</h3>
-            <p>Rütbe: Komuta Harekat Merkezi</p>
+            <h3 id="giris-yapan-isim">---</h3>
+            <p id="giris-yapan-rutbe">Rütbe: ---</p>
           </div>
           <div>
             <p><strong>Aktif Görev:</strong></p>
@@ -131,7 +131,6 @@
 
       <div id="yonetici-paneli" class="content">
         <h2>YÖNETİCİ PANELİ</h2>
-
         <div class="admin-section">
           <h3>Yeni Kategori Ekle</h3>
           <input id="kategori-baslik" placeholder="Kategori Adı (örn: Emniyet Personeli)">
@@ -139,14 +138,12 @@
           <button class="primary" onclick="kategoriEkle()">KATEGORİ EKLE</button>
           <p id="kategoriSuccess" class="success-msg">✓ Kategori eklendi</p>
         </div>
-
         <div class="admin-section">
           <h3>Kategori Kaldır</h3>
           <select id="kaldir-kategori"></select>
           <button class="primary" style="background:var(--danger); width:100%; margin-top:0.8rem;" onclick="kategoriKaldir()">KATEGORİYİ KALDIR</button>
           <p id="kaldirSuccess" class="success-msg">✓ Kategori kaldırıldı</p>
         </div>
-
         <div class="admin-section">
           <h3>Alt Konu / Rapor Ekle</h3>
           <select id="alt-ekle-kategori"></select>
@@ -156,7 +153,6 @@
           <button class="primary" onclick="altKonuEkle()">ALT KONU / RAPOR EKLE</button>
           <p id="altSuccess" class="success-msg">✓ Eklendi</p>
         </div>
-
         <div class="admin-section">
           <h3>Alt Konu / Rapor Kaldır</h3>
           <select id="alt-kaldir-kategori" onchange="updateAltKaldirSelect()"></select>
@@ -170,10 +166,25 @@
 </div>
 
 <script>
-const ADMIN_KOD = "MIT2026CCCC1965";
+// ──────────────────────────────────────────────
+//          PERSONEL VERİTABANI
+// ──────────────────────────────────────────────
+const PERSONELLER = [
+  { kodadi: "KORKUT",   sifre: "MIT2026CCCC1965", rutbe: "Komuta Harekat Merkezi",      seviye: 5, isAdmin: true  },
+  { kodadi: "BEYAZIT",  sifre: "MIT2026BBBB1453", rutbe: "Karşı İstihbarat Şefi",        seviye: 4, isAdmin: false },
+  { kodadi: "ANKA",     sifre: "MIT2026DDDD0033", rutbe: "Operasyon Uzmanı",            seviye: 3, isAdmin: false },
+  { kodadi: "NEO",      sifre: "MIT2026EEEE0044", rutbe: "Siber Güvenlik Analisti",     seviye: 3, isAdmin: false },
+  { kodadi: "SARI",     sifre: "MIT2026CCCC0055", rutbe: "Analiz ve Değerlendirme",     seviye: 3, isAdmin: false },
+  { kodadi: "YILKIRAN", sifre: "MIT2026DDDD0066", rutbe: "Saha İstihbarat Görevlisi",    seviye: 4, isAdmin: false },
+  { kodadi: "ZÜMRÜT",   sifre: "MIT2026AAAA0077", rutbe: "Teknolojik İzleme Uzmanı",    seviye: 3, isAdmin: false }
+];
+
+let currentUser = null;
 let isAdmin = false;
 
-let arsivKategoriler = JSON.parse(localStorage.getItem('mit_arsiv_kategoriler')) || [
+const STORAGE_KEY = 'mit_arsiv_kategoriler';
+
+let arsivKategoriler = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
   { id: '1', baslik: 'Emniyet Personeli', aciklama: 'Emniyet teşkilatındaki şüpheli hareketler ve bağlantılar', icerik: [] },
   { id: '2', baslik: 'Yargı Mensupları', aciklama: 'Hâkim, savcı ve adli personel dosyaları', icerik: [] }
 ];
@@ -197,18 +208,15 @@ function renderArsiv() {
 }
 
 function arsivKategoriAc(kat) {
-  const grid = document.getElementById('arsiv-grid');
+  document.getElementById('arsiv-grid').style.display = 'none';
   const detay = document.getElementById('arsiv-detay');
-  grid.style.display = 'none';
   detay.style.display = 'block';
-
   let html = `
     <button class="primary" onclick="arsivGeriDon()">Geri Dön</button>
     <h2>${kat.baslik}</h2>
     <p>${kat.aciklama}</p>
     <h3>Kayıtlar:</h3>
   `;
-
   if (kat.icerik.length === 0) {
     html += '<p>Henüz kayıt yok.</p>';
   } else {
@@ -216,7 +224,6 @@ function arsivKategoriAc(kat) {
       html += `<div class="alt-kutu"><strong>${item.baslik}</strong> <small>(${item.tarih})</small><br>${item.detay}</div>`;
     });
   }
-
   detay.innerHTML = html;
 }
 
@@ -229,51 +236,60 @@ function showSection(id) {
   document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
   const target = document.getElementById(id);
   if (target) target.classList.add('active');
-
   document.querySelectorAll('.sidebar button').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.querySelector(`button[onclick="showSection('${id}')"]`);
   if (activeBtn) activeBtn.classList.add('active');
-
   if (id === 'mit-arsivi') renderArsiv();
 }
 
 function girisYap() {
-  const pass = document.getElementById('access-password').value.trim();
+  const kodadi = document.getElementById('personel-kodadi').value.trim().toUpperCase();
+  const sifre = document.getElementById('access-password').value.trim();
   const errorP = document.getElementById('wrong-pass');
 
   errorP.style.display = 'none';
 
-  if (!pass) {
-    errorP.textContent = '× ŞİFRE GİRMEDİNİZ ×';
+  if (!kodadi || !sifre) {
+    errorP.textContent = '× KOD ADI ve PERSONEL KODU GİRMEDİNİZ ×';
     errorP.style.display = 'block';
-    document.getElementById('access-password').focus();
     return;
   }
 
-  if (pass === ADMIN_KOD) {
-    isAdmin = true;
-    document.getElementById('admin-yonetim-btn').style.display = 'block';
-    document.getElementById('giris').style.display = 'none';
-    document.getElementById('panel').style.display = 'block';
-    document.body.classList.add('panel-active');
+  const user = PERSONELLER.find(p => p.kodadi.toUpperCase() === kodadi && p.sifre === sifre);
 
-    showSection('dashboard');
-    renderArsiv();
-  } else {
-    errorP.textContent = '× GEÇERSİZ KOD – MERKEZE BİLDİRİLDİ ×';
+  if (!user) {
+    errorP.textContent = '× GEÇERSİZ KOD ADI / PERSONEL KODU – MERKEZE BİLDİRİLDİ ×';
     errorP.style.display = 'block';
     document.getElementById('access-password').value = '';
-    document.getElementById('access-password').focus();
+    document.getElementById('personel-kodadi').select();
+    return;
   }
+
+  currentUser = user;
+  isAdmin = user.isAdmin === true;
+
+  document.getElementById('giris-yapan-isim').textContent = user.kodadi;
+  document.getElementById('giris-yapan-rutbe').textContent = `Rütbe: ${user.rutbe}`;
+
+  document.getElementById('admin-yonetim-btn').style.display = isAdmin ? 'block' : 'none';
+
+  document.getElementById('giris').style.display = 'none';
+  document.getElementById('panel').style.display = 'block';
+  document.body.classList.add('panel-active');
+
+  showSection('dashboard');
+  renderArsiv();
 }
 
 function cikisYap() {
   if (!confirm('Çıkış yapmak istiyor musunuz?')) return;
+  currentUser = null;
   isAdmin = false;
   document.getElementById('admin-yonetim-btn').style.display = 'none';
   document.getElementById('panel').style.display = 'none';
   document.getElementById('giris').style.display = 'block';
   document.body.classList.remove('panel-active');
+  document.getElementById('personel-kodadi').value = '';
   document.getElementById('access-password').value = '';
 }
 
@@ -296,26 +312,14 @@ function gonderRapor() {
   }, 2500);
 }
 
-function gonderDuyuru() {
-  const b = document.getElementById('duyuru-baslik').value.trim();
-  const i = document.getElementById('duyuru-icerik').value.trim();
-  if (!b || !i) return alert('Başlık ve içerik zorunlu!');
-  document.getElementById('duyuruSuccess').style.display = 'block';
-  setTimeout(() => {
-    document.getElementById('duyuruSuccess').style.display = 'none';
-    document.getElementById('duyuru-baslik').value = '';
-    document.getElementById('duyuru-icerik').value = '';
-  }, 2500);
-}
-
 function kategoriEkle() {
-  if (!isAdmin) return alert('Yetkisiz!');
+  if (!isAdmin) return alert('Bu işlem için yetkiniz yok!');
   const baslik = document.getElementById('kategori-baslik')?.value.trim();
   const aciklama = document.getElementById('kategori-aciklama')?.value.trim();
   if (!baslik) return alert('Kategori adı zorunlu!');
   const yeni = { id: Date.now().toString(), baslik, aciklama, icerik: [] };
   arsivKategoriler.push(yeni);
-  localStorage.setItem('mit_arsiv_kategoriler', JSON.stringify(arsivKategoriler));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
   document.getElementById('kategoriSuccess').style.display = 'block';
   setTimeout(() => {
     document.getElementById('kategoriSuccess').style.display = 'none';
@@ -327,20 +331,13 @@ function kategoriEkle() {
 }
 
 function kategoriKaldir() {
-  if (!isAdmin) return alert('Yetkisiz!');
+  if (!isAdmin) return alert('Bu işlem için yetkiniz yok!');
   const select = document.getElementById('kaldir-kategori');
-  if (!select) return alert('Kategori seçimi bulunamadı!');
-  const id = select.value.trim();
+  const id = select?.value?.trim();
   if (!id) return alert('Lütfen kaldırılacak kategoriyi seçin!');
-
-  const kategori = arsivKategoriler.find(k => k.id === id);
-  if (!kategori) return alert('Seçilen kategori bulunamadı!');
-
-  if (!confirm(`"${kategori.baslik}" ve içindeki ${kategori.icerik.length} kayıt kalıcı olarak silinecek.\nEmin misiniz?`)) return;
-
+  if (!confirm('Bu kategori ve içindeki tüm kayıtlar kalıcı olarak silinecek. Emin misiniz?')) return;
   arsivKategoriler = arsivKategoriler.filter(k => k.id !== id);
-  localStorage.setItem('mit_arsiv_kategoriler', JSON.stringify(arsivKategoriler));
-
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
   document.getElementById('kaldirSuccess').style.display = 'block';
   setTimeout(() => {
     document.getElementById('kaldirSuccess').style.display = 'none';
@@ -350,20 +347,16 @@ function kategoriKaldir() {
 }
 
 function altKonuEkle() {
-  if (!isAdmin) return alert('Yetkisiz!');
+  if (!isAdmin) return alert('Bu işlem için yetkiniz yok!');
   const katId = document.getElementById('alt-ekle-kategori')?.value?.trim();
-  const baslik = document.getElementById('alt-baslik')?.value?.trim();
-  const detay = document.getElementById('alt-detay')?.value?.trim();
-  const tarih = document.getElementById('alt-tarih')?.value?.trim() || new Date().toLocaleDateString('tr-TR');
-
+  const baslik = document.getElementById('alt-baslik')?.value.trim();
+  const detay = document.getElementById('alt-detay')?.value.trim();
+  const tarih = document.getElementById('alt-tarih')?.value.trim() || new Date().toLocaleDateString('tr-TR');
   if (!katId || !baslik || !detay) return alert('Kategori, başlık ve detay zorunlu!');
-
   const kategori = arsivKategoriler.find(k => k.id === katId);
   if (!kategori) return alert('Kategori bulunamadı');
-
   kategori.icerik.push({ baslik, detay, tarih });
-  localStorage.setItem('mit_arsiv_kategoriler', JSON.stringify(arsivKategoriler));
-
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
   document.getElementById('altSuccess').style.display = 'block';
   setTimeout(() => {
     document.getElementById('altSuccess').style.display = 'none';
@@ -375,35 +368,25 @@ function altKonuEkle() {
 }
 
 function updateYonetimDropdowns() {
-  const kaldirSel = document.getElementById('kaldir-kategori');
-  const altEkleSel = document.getElementById('alt-ekle-kategori');
-  const altKaldirKatSel = document.getElementById('alt-kaldir-kategori');
-
   const html = '<option value="">Seçiniz</option>' + arsivKategoriler.map(k => `<option value="${k.id}">${k.baslik}</option>`).join('');
-
-  if (kaldirSel) kaldirSel.innerHTML = html;
-  if (altEkleSel) altEkleSel.innerHTML = html;
-  if (altKaldirKatSel) {
-    altKaldirKatSel.innerHTML = html;
-    updateAltKaldirSelect();
-  }
+  ['kaldir-kategori', 'alt-ekle-kategori', 'alt-kaldir-kategori'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+  updateAltKaldirSelect();
 }
 
 function updateAltKaldirSelect() {
   const katId = document.getElementById('alt-kaldir-kategori')?.value?.trim();
   const sel = document.getElementById('alt-kaldir-item');
   if (!sel) return;
-
   sel.innerHTML = '<option value="">Rapor seçin</option>';
-
   if (!katId) return;
-
   const kategori = arsivKategoriler.find(k => k.id === katId);
   if (!kategori || kategori.icerik.length === 0) {
     sel.innerHTML += '<option value="" disabled>Rapor yok</option>';
     return;
   }
-
   kategori.icerik.forEach((item, idx) => {
     const opt = document.createElement('option');
     opt.value = idx;
@@ -413,27 +396,16 @@ function updateAltKaldirSelect() {
 }
 
 function altKonuKaldir() {
-  if (!isAdmin) return alert('Yetkisiz!');
+  if (!isAdmin) return alert('Bu işlem için yetkiniz yok!');
   const katId = document.getElementById('alt-kaldir-kategori')?.value?.trim();
   const idxStr = document.getElementById('alt-kaldir-item')?.value?.trim();
-
-  if (!katId) return alert('Kategori seçin!');
-  if (!idxStr) return alert('Kaldırılacak raporu seçin!');
-
+  if (!katId || !idxStr) return alert('Lütfen kategori ve rapor seçin!');
   const idx = parseInt(idxStr);
   const kategori = arsivKategoriler.find(k => k.id === katId);
-
-  if (!kategori) return alert('Kategori bulunamadı!');
-  if (isNaN(idx) || idx < 0 || idx >= kategori.icerik.length) return alert('Geçersiz seçim!');
-
-  const rapor = kategori.icerik[idx];
-  const raporAdi = rapor.baslik || 'Bu kayıt';
-
-  if (!confirm(`"${raporAdi}" (${rapor.tarih || ''}) kalıcı silinecek.\nGeri dönüş yok, emin misiniz?`)) return;
-
+  if (!kategori || isNaN(idx) || idx < 0 || idx >= kategori.icerik.length) return alert('Geçersiz seçim!');
+  if (!confirm(`"${kategori.icerik[idx].baslik || 'Bu kayıt'}" kalıcı olarak silinecek. Emin misiniz?`)) return;
   kategori.icerik.splice(idx, 1);
-  localStorage.setItem('mit_arsiv_kategoriler', JSON.stringify(arsivKategoriler));
-
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
   document.getElementById('altKaldirSuccess').style.display = 'block';
   setTimeout(() => {
     document.getElementById('altKaldirSuccess').style.display = 'none';
@@ -442,11 +414,12 @@ function altKonuKaldir() {
   }, 2000);
 }
 
-// Saat ve Tema
+// Saat
 setInterval(() => {
   document.getElementById('current-time').textContent = new Date().toLocaleTimeString('tr-TR', {hour12:false});
 }, 1000);
 
+// Tema
 document.getElementById('theme-toggle-btn').onclick = () => {
   document.body.classList.toggle('dark');
   const icon = document.querySelector('#theme-toggle-btn i');
@@ -456,15 +429,14 @@ document.getElementById('theme-toggle-btn').onclick = () => {
 
 // Sayfa yüklendiğinde
 document.addEventListener('DOMContentLoaded', () => {
-  const buton = document.getElementById('giris-buton');
-  const input = document.getElementById('access-password');
-
-  if (buton) buton.addEventListener('click', girisYap);
-  if (input) {
-    input.addEventListener('keypress', e => { if (e.key === 'Enter') girisYap(); });
-    input.focus();
-  }
-
+  document.getElementById('giris-buton').addEventListener('click', girisYap);
+  document.getElementById('personel-kodadi').addEventListener('keypress', e => {
+    if (e.key === 'Enter') document.getElementById('access-password').focus();
+  });
+  document.getElementById('access-password').addEventListener('keypress', e => {
+    if (e.key === 'Enter') girisYap();
+  });
+  document.getElementById('personel-kodadi').focus();
   updateYonetimDropdowns();
 });
 </script>
