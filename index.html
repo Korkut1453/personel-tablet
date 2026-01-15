@@ -165,19 +165,25 @@
 // PERSONEL LİSTESİ - SON HALİ
 // ──────────────────────────────────────────────
 const PERSONELLER = [
-  { sifre: "MIT2026CCCC1965", kodadi: "KORKUT",     rutbe: "Müsteşar/Başkan",               seviye: 5, isAdmin: true  },
-  { sifre: "MIT2026CCCC1453", kodadi: "BEYAZIT",    rutbe: "Yardımcı Başkan",                seviye: 5, isAdmin: false },
-  { sifre: "MIT2026CCCC0033", kodadi: "ANKA",       rutbe: "JİTEM Başkanı",                  seviye: 5, isAdmin: true  },
-  { sifre: "MIT2026CCCC0044", kodadi: "NEO",        rutbe: "Baş Uzman",                      seviye: 4, isAdmin: false },
-  { sifre: "MIT2026BBBB1155", kodadi: "ZÜMRÜTT",    rutbe: "İstihbarat Uzmanı",              seviye: 4, isAdmin: false },
-  { sifre: "MIT2026BBBB2266", kodadi: "HAZAL",      rutbe: "Özel Operasyonlar Tim Personeli", seviye: 4, isAdmin: false },
-  { sifre: "MIT2026BBBB3377", kodadi: "SARI",       rutbe: "Yer Altı Personeli",             seviye: 3, isAdmin: false },
-  { sifre: "EGM2026EEEE0155", kodadi: "BOZOK",      rutbe: "Emniyet İstihbarat Operasyonel Teknik Bilgi Sağlayıcısı", seviye: 3, isAdmin: false },
-  { sifre: "EGM2026EEEE1122", kodadi: "YILKIRAN",   rutbe: "Emniyet Operasyon Şefi",         seviye: 4, isAdmin: false },
-  { sifre: "MIT2026EEEE0212", kodadi: "BEYAZ",      rutbe: "Koruma ve Emniyet Memuru: Kritik personelin ve tesislerin güvenliğini sağlar", seviye: 3, isAdmin: false },
-  { sifre: "MIT2026EEEE3434", kodadi: "TATAR",      rutbe: "Özel Harekat Bağlı Operasyonal Destek Koordine Amiri", seviye: 4, isAdmin: false }
+  { sifre: "MIT2026CCCC1965", kodadi: "KORKUT", rutbe: "Müsteşar/Başkan", seviye: 5, isAdmin: true },
+  { sifre: "MIT2026CCCC1453", kodadi: "BEYAZIT", rutbe: "Yardımcı Başkan", seviye: 5, isAdmin: false },
+  { sifre: "MIT2026CCCC0033", kodadi: "ANKA", rutbe: "JİTEM Başkanı", seviye: 5, isAdmin: true },
+  { sifre: "MIT2026CCCC0044", kodadi: "NEO", rutbe: "Baş Uzman", seviye: 4, isAdmin: false },
+  { sifre: "MIT2026BBBB1155", kodadi: "ZÜMRÜTT", rutbe: "İstihbarat Uzmanı", seviye: 4, isAdmin: false },
+  { sifre: "MIT2026BBBB2266", kodadi: "HAZAL", rutbe: "Özel Operasyonlar Tim Personeli", seviye: 4, isAdmin: false },
+  { sifre: "MIT2026BBBB3377", kodadi: "SARI", rutbe: "Yer Altı Personeli", seviye: 3, isAdmin: false },
+  { sifre: "EGM2026EEEE0155", kodadi: "BOZOK", rutbe: "Emniyet İstihbarat Operasyonel Teknik Bilgi Sağlayıcısı", seviye: 3, isAdmin: false },
+  { sifre: "EGM2026EEEE1122", kodadi: "YEŞİL", rutbe: "Emniyet Operasyon Şefi", seviye: 4, isAdmin: false },
+  { sifre: "MIT2026EEEE0212", kodadi: "BEYAZ", rutbe: "Koruma ve Emniyet Memuru: Kritik personelin ve tesislerin güvenliğini sağlar", seviye: 3, isAdmin: false },
+  { sifre: "MIT2026EEEE3434", kodadi: "TATAR", rutbe: "Özel Harekat Bağlı Operasyonal Destek Koordine Amiri", seviye: 4, isAdmin: false }
 ];
 
+// Spam koruması
+const lastReportTime = {};
+const lastDuyuruTime = {};
+const COOLDOWN_SECONDS = 300;
+
+// Diğer değişkenler
 let currentUser = null;
 let isAdmin = false;
 const STORAGE_KEY = 'mit_arsiv_kategoriler';
@@ -185,7 +191,8 @@ let arsivKategoriler = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
   { id: '1', baslik: 'Emniyet Personeli', aciklama: 'Emniyet teşkilatındaki şüpheli hareketler ve bağlantılar', icerik: [] },
   { id: '2', baslik: 'Yargı Mensupları', aciklama: 'Hâkim, savcı ve adli personel dosyaları', icerik: [] }
 ];
-// Discord Webhook URL'leri
+
+// Webhook'lar
 const WEBHOOK_RAPOR = "https://discord.com/api/webhooks/1457829355358261615/-uOZYjIN03dbE01uasvp0QK2bxujojEShfhrQX-bEAPFwpCebn9TdJYMgBipfMFf-3nX";
 const WEBHOOK_DUYURU = "https://discord.com/api/webhooks/1457829359250440326/NVcJMDNV4gZgYrtiB0JtxnfflbBJFJwIEV3RXNUbE37Glq94h8dV6wEoREySBJ4gsfI_";
 
@@ -207,29 +214,34 @@ function girisYap() {
   }
   currentUser = user;
   
-  // Yönetici erişimi SADECE KORKUT ve ANKA için
   isAdmin = (user.sifre === "MIT2026CCCC1965" || user.sifre === "MIT2026CCCC0033");
-
-  // Birim otomatik belirleme
+  
   let birim = "Milli İstihbarat Teşkilatı";
   if (user.sifre.includes('EEEE')) {
     birim = "Emniyet Teşkilatı";
   }
-
+  
   document.getElementById('giris-yapan-isim').textContent = user.kodadi;
   document.getElementById('giris-yapan-birim').textContent = `Birim: ${birim}`;
   document.getElementById('giris-yapan-rutbe').textContent = `Rütbe: ${user.rutbe}`;
-
   document.getElementById('admin-yonetim-btn').style.display = isAdmin ? 'block' : 'none';
-
+  
   document.getElementById('giris').style.display = 'none';
   document.getElementById('panel').style.display = 'block';
   document.body.classList.add('panel-active');
   showSection('dashboard');
   renderArsiv();
 }
-// RAPOR GÖNDERME (rol etiketli)
+
 async function gonderRapor() {
+  const now = Date.now();
+  const userKey = currentUser.sifre;
+
+  if (lastReportTime[userKey] && now - lastReportTime[userKey] < COOLDOWN_SECONDS * 1000) {
+    const kalan = Math.ceil((COOLDOWN_SECONDS * 1000 - (now - lastReportTime[userKey])) / 1000);
+    return alert(`Spam koruması aktif! Lütfen ${kalan} saniye sonra tekrar rapor gönderebilirsiniz.`);
+  }
+
   const text = document.getElementById('report-text').value.trim();
   if (!text) return alert('Rapor içeriği boş olamaz!');
 
@@ -239,11 +251,11 @@ async function gonderRapor() {
   }
 
   const payload = {
-    content: "<@&1452782503759843482>",  // Rapor rolünü etiketle
+    content: "<@&1452782503759843482>",
     embeds: [{
       title: `📤 Yeni Rapor - ${currentUser.kodadi} (${currentUser.rutbe}) • ${birim}`,
       description: "```" + text.substring(0, 2000) + "```",
-      color: 3447003, // mavi
+      color: 3447003,
       timestamp: new Date().toISOString(),
       footer: { text: "MİT Güvenli Terminal • " + new Date().toLocaleString('tr-TR') }
     }]
@@ -256,6 +268,7 @@ async function gonderRapor() {
       body: JSON.stringify(payload)
     });
     if (res.ok) {
+      lastReportTime[userKey] = now;
       document.getElementById('raporSuccess').style.display = 'block';
       setTimeout(() => {
         document.getElementById('raporSuccess').style.display = 'none';
@@ -268,12 +281,24 @@ async function gonderRapor() {
     alert('Gönderme hatası: ' + err.message);
   }
 }
+
 async function gonderDuyuru() {
   if (!isAdmin) return alert('Sadece yöneticiler duyuru gönderebilir!');
+
+  const now = Date.now();
+  const userKey = currentUser.sifre;
+
+  if (lastDuyuruTime[userKey] && now - lastDuyuruTime[userKey] < COOLDOWN_SECONDS * 1000) {
+    const kalan = Math.ceil((COOLDOWN_SECONDS * 1000 - (now - lastDuyuruTime[userKey])) / 1000);
+    return alert(`Spam koruması aktif! Lütfen ${kalan} saniye sonra tekrar duyuru gönderebilirsiniz.`);
+  }
+
   const baslik = document.getElementById('duyuru-baslik').value.trim();
   const icerik = document.getElementById('duyuru-icerik').value.trim();
   if (!baslik || !icerik) return alert('Başlık ve içerik zorunlu!');
+
   const payload = {
+    content: "<@&997276536250056855>",
     embeds: [{
       title: `🔔 ${baslik}`,
       description: icerik,
@@ -283,6 +308,7 @@ async function gonderDuyuru() {
       footer: { text: "MİT Personel Duyurusu • " + new Date().toLocaleString('tr-TR') }
     }]
   };
+
   try {
     const res = await fetch(WEBHOOK_DUYURU, {
       method: 'POST',
@@ -290,6 +316,7 @@ async function gonderDuyuru() {
       body: JSON.stringify(payload)
     });
     if (res.ok) {
+      lastDuyuruTime[userKey] = now;
       document.getElementById('duyuruSuccess').style.display = 'block';
       setTimeout(() => {
         document.getElementById('duyuruSuccess').style.display = 'none';
@@ -305,7 +332,7 @@ async function gonderDuyuru() {
 }
 
 // ──────────────────────────────────────────────
-// KALAN FONKSİYONLAR (değişmedi)
+// ARŞİV VE YÖNETİM FONKSİYONLARI (tamamlandı)
 // ──────────────────────────────────────────────
 function renderArsiv() {
   const grid = document.getElementById('arsiv-grid');
@@ -379,63 +406,29 @@ function sablonDoldur(tip) {
   area.value = text;
 }
 
-// Kategori ve alt konu fonksiyonları (eksik kısımlar için placeholder - kendi kodundan tamamla)
-function kategoriEkle() { if (!isAdmin) return alert('Yetkisiz!'); alert('Kategori eklendi (kod tamamlanacak)'); }
-function kategoriKaldir() { if (!isAdmin) return alert('Yetkisiz!'); alert('Kategori kaldırıldı (kod tamamlanacak)'); }
-function altKonuEkle() { if (!isAdmin) return alert('Yetkisiz!'); alert('Alt konu eklendi (kod tamamlanacak)'); }
-function altKonuKaldir() { if (!isAdmin) return alert('Yetkisiz!'); alert('Alt konu kaldırıldı (kod tamamlanacak)'); }
-function updateYonetimDropdowns() { /* dropdown güncelleme kodun buraya gelecek */ }
-function updateAltKaldirSelect() { /* dropdown güncelleme kodun buraya gelecek */ }
-
-// Saat ve Tema
-setInterval(() => {
-  document.getElementById('current-time').textContent = new Date().toLocaleTimeString('tr-TR', {hour12:false});
-}, 1000);
-document.getElementById('theme-toggle-btn').onclick = () => {
-  document.body.classList.toggle('dark');
-  const icon = document.querySelector('#theme-toggle-btn i');
-  icon.classList.toggle('fa-moon');
-  icon.classList.toggle('fa-sun');
-};
-
-// Sayfa yüklendiğinde
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('giris-buton').addEventListener('click', girisYap);
-  document.getElementById('access-password').addEventListener('keypress', e => {
-    if (e.key === 'Enter') girisYap();
-  });
-  document.getElementById('access-password').focus();
-  // updateYonetimDropdowns(); // Eğer dropdown varsa burayı aktif et
-});
-// Kategori dropdown'larını güncelleyen ana fonksiyon
 function updateYonetimDropdowns() {
   const kaldirSelect = document.getElementById('kaldir-kategori');
   const altEkleSelect = document.getElementById('alt-ekle-kategori');
   const altKaldirSelect = document.getElementById('alt-kaldir-kategori');
 
-  // Önce temizle
   [kaldirSelect, altEkleSelect, altKaldirSelect].forEach(select => {
     if (select) select.innerHTML = '<option value="">Kategori Seç</option>';
   });
 
-  // Kategorileri doldur
   arsivKategoriler.forEach(kat => {
     const option = document.createElement('option');
     option.value = kat.id;
     option.textContent = kat.baslik;
 
-    // Üç select'e de aynı seçenekleri ekle
     if (kaldirSelect) kaldirSelect.appendChild(option.cloneNode(true));
     if (altEkleSelect) altEkleSelect.appendChild(option.cloneNode(true));
     if (altKaldirSelect) altKaldirSelect.appendChild(option.cloneNode(true));
   });
 }
 
-// Alt konu kaldırma için seçilen kategoriye göre alt konuları yükle
 function updateAltKaldirSelect() {
   const kategoriSelect = document.getElementById('alt-kaldir-kategori');
   const itemSelect = document.getElementById('alt-kaldir-item');
-
   if (!kategoriSelect || !itemSelect) return;
 
   const selectedId = kategoriSelect.value;
@@ -454,106 +447,93 @@ function updateAltKaldirSelect() {
   }
 }
 
-// Kategori Ekleme (localStorage'a kaydedip dropdown'ları güncelle)
 function kategoriEkle() {
   if (!isAdmin) return alert('Yetkisiz!');
-  
   const baslik = document.getElementById('kategori-baslik').value.trim();
   const aciklama = document.getElementById('kategori-aciklama').value.trim();
-  
   if (!baslik) return alert('Kategori adı zorunlu!');
-  
-  const yeniId = Date.now().toString(); // basit unique id
-  arsivKategoriler.push({
-    id: yeniId,
-    baslik: baslik,
-    aciklama: aciklama,
-    icerik: []
-  });
-  
+  const yeniId = Date.now().toString();
+  arsivKategoriler.push({ id: yeniId, baslik, aciklama, icerik: [] });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
-  renderArsiv(); // Ana arşiv grid'ini güncelle
-  updateYonetimDropdowns(); // Dropdown'ları güncelle
-  
+  renderArsiv();
+  updateYonetimDropdowns();
   document.getElementById('kategori-baslik').value = '';
   document.getElementById('kategori-aciklama').value = '';
   document.getElementById('kategoriSuccess').style.display = 'block';
   setTimeout(() => document.getElementById('kategoriSuccess').style.display = 'none', 3000);
 }
 
-// Kategori Kaldırma
 function kategoriKaldir() {
   if (!isAdmin) return alert('Yetkisiz!');
-  
   const select = document.getElementById('kaldir-kategori');
   const selectedId = select.value;
-  
   if (!selectedId) return alert('Kategori seçmediniz!');
-  
   if (!confirm('Bu kategori ve içindeki tüm kayıtlar silinecek. Emin misiniz?')) return;
-  
   arsivKategoriler = arsivKategoriler.filter(k => k.id !== selectedId);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
-  
   renderArsiv();
   updateYonetimDropdowns();
-  
   document.getElementById('kaldirSuccess').style.display = 'block';
   setTimeout(() => document.getElementById('kaldirSuccess').style.display = 'none', 3000);
 }
 
-// Alt Konu Ekleme
 function altKonuEkle() {
   if (!isAdmin) return alert('Yetkisiz!');
-  
   const kategoriId = document.getElementById('alt-ekle-kategori').value;
   const baslik = document.getElementById('alt-baslik').value.trim();
   const detay = document.getElementById('alt-detay').value.trim();
   const tarih = document.getElementById('alt-tarih').value.trim() || new Date().toLocaleDateString('tr-TR');
-  
   if (!kategoriId || !baslik || !detay) return alert('Kategori, başlık ve detay zorunlu!');
-  
   const kategori = arsivKategoriler.find(k => k.id === kategoriId);
   if (kategori) {
     kategori.icerik.push({ baslik, detay, tarih });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
-    
     renderArsiv();
     updateYonetimDropdowns();
-    
     document.getElementById('altSuccess').style.display = 'block';
     setTimeout(() => document.getElementById('altSuccess').style.display = 'none', 3000);
-    
-    // Formu temizle
     document.getElementById('alt-baslik').value = '';
     document.getElementById('alt-detay').value = '';
   }
 }
 
-// Alt Konu Kaldırma
 function altKonuKaldir() {
   if (!isAdmin) return alert('Yetkisiz!');
-  
   const kategoriId = document.getElementById('alt-kaldir-kategori').value;
   const itemIndex = document.getElementById('alt-kaldir-item').value;
-  
   if (!kategoriId || itemIndex === '') return alert('Kategori ve alt konu seçmediniz!');
-  
   const kategori = arsivKategoriler.find(k => k.id === kategoriId);
   if (kategori && kategori.icerik[itemIndex]) {
     if (!confirm('Bu alt konuyu kaldırmak istiyor musunuz?')) return;
-    
     kategori.icerik.splice(itemIndex, 1);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(arsivKategoriler));
-    
     renderArsiv();
     updateYonetimDropdowns();
     updateAltKaldirSelect();
-    
     document.getElementById('altKaldirSuccess').style.display = 'block';
     setTimeout(() => document.getElementById('altKaldirSuccess').style.display = 'none', 3000);
   }
 }
+
+// Saat ve Tema
+setInterval(() => {
+  document.getElementById('current-time').textContent = new Date().toLocaleTimeString('tr-TR', {hour12:false});
+}, 1000);
+
+document.getElementById('theme-toggle-btn').onclick = () => {
+  document.body.classList.toggle('dark');
+  const icon = document.querySelector('#theme-toggle-btn i');
+  icon.classList.toggle('fa-moon');
+  icon.classList.toggle('fa-sun');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('giris-buton').addEventListener('click', girisYap);
+  document.getElementById('access-password').addEventListener('keypress', e => {
+    if (e.key === 'Enter') girisYap();
+  });
+  document.getElementById('access-password').focus();
+});
 </script>
 </body>
 </html>
