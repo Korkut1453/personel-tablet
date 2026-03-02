@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="MİT Güvenli Personel Uygulaması - Yetkili personel girişi"/>
+  <meta name="theme-color" content="#003087"/>
+  <title>MİT | Güvenli Personel Uygulaması</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" 
+        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <style>
+    /* ==========================================
+       CSS VARIABLES & RESET
+       ========================================== */
+    :root {
+      /* Colors */
+      --color-primary: #003087;
+      --color-primary-light: #0055b3;
+      --color-primary-dark: #002255;
+      --color-accent: #1565c0;
+      --color-danger: #dc2626;
+      --color-success: #059669;
+      --color-warning: #d97706;
+      
+      /* Neutrals */
+      --color-bg: #f4f6f9;
+      --color-surface: #ffffff;
+      --color-border: #b0c4de;
+      --color-text: #1f2937;
+      --color-text-muted: #6b7280;
+      
+      /* Dark Mode */
+      --color-bg-dark: #0d1117;
+      --color-surface-dark: #161b22;
+      --color-border-dark: #30363d;
+      --color-text-dark: #c9d1d9;
+      
+      /* Spacing */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2rem;
+      --space-2xl: 3rem;
+      
+      /* Typography */
+      --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-size-sm: 0.875rem;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.125rem;
+      --font-size-xl: 1.5rem;
+      --font-size-2xl: 2rem;
+      
+      /* Effects */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-base: 300ms ease;
+      --transition-slow: 500ms ease;
+      
+      /* Layout */
+      --sidebar-width: 280px;
+      --header-height: 70px;
+      --border-radius: 8px;
+      --border-radius-lg: 12px;
+    }
+
+    /* Dark Mode Variables */
+    [data-theme="dark"] {
+      --color-bg: var(--color-bg-dark);
+      --color-surface: var(--color-surface-dark);
+      --color-border: var(--color-border-dark);
+      --color-text: var(--color-text-dark);
+      --color-text-muted: #8b949e;
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+      min-height: 100vh;
+      transition: background-color var(--transition-base), color var(--transition-base);
+    }
+
+    /* ==========================================
+       UTILITIES
+       ========================================== */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    .text-center { text-align: center; }
+    .text-success { color: var(--color-success); }
+    .text-danger { color: var(--color-danger); }
+    .text-muted { color: var(--color-text-muted); }
+    
+    .mb-sm { margin-bottom: var(--space-sm); }
+    .mb-md { margin-bottom: var(--space-md); }
+    .mb-lg { margin-bottom: var(--space-lg); }
+    .mt-lg { margin-top: var(--space-lg); }
+
+    /* ==========================================
+       LAYOUT COMPONENTS
+       ========================================== */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+      color: white;
+      padding: var(--space-xl) var(--space-lg);
+      overflow-y: auto;
+      z-index: 100;
+      transform: translateX(-100%);
+      transition: transform var(--transition-base);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .sidebar.is-open {
+      transform: translateX(0);
+    }
+
+    .sidebar__title {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .sidebar__nav {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .sidebar__link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      width: 100%;
+      padding: var(--space-md) var(--space-lg);
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: var(--font-size-base);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+    }
+
+    .sidebar__link:hover,
+    .sidebar__link:focus {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      outline: none;
+      transform: translateX(4px);
+    }
+
+    .sidebar__link.is-active {
+      background: rgba(255, 255, 255, 0.25);
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar__link i {
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Main Content Area */
+    .main {
+      flex: 1;
+      margin-left: 0;
+      transition: margin-left var(--transition-base);
+      padding-top: var(--header-height);
+    }
+
+    .sidebar.is-open ~ .main {
+      margin-left: var(--sidebar-width);
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: var(--color-primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-xl);
+      z-index: 99;
+      box-shadow: var(--shadow-md);
+    }
+
+    .header__brand {
+      font-size: var(--font-size-lg);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .header__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xl);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+    }
+
+    .header__time {
+      font-family: 'Courier New', monospace;
+      background: rgba(255, 255, 255, 0.15);
+      padding: var(--space-xs) var(--space-md);
+      border-radius: 4px;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid transparent;
+      border-radius: 50%;
+      color: white;
+      font-size: var(--font-size-lg);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover,
+    .theme-toggle:focus {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      outline: none;
+      transform: rotate(15deg);
+    }
+
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: var(--border-radius);
+      color: white;
+      font-size: var(--font-size-lg);
+      cursor: pointer;
+      margin-right: var(--space-md);
+      transition: background var(--transition-fast);
+    }
+
+    .menu-toggle:hover,
+    .menu-toggle:focus {
+      background: rgba(255, 255, 255, 0.25);
+      outline: none;
+    }
+
+    /* ==========================================
+       CONTENT SECTIONS
+       ========================================== */
+    .content {
+      display: none;
+      padding: var(--space-xl);
+      animation: fadeIn var(--transition-base);
+    }
+
+    .content.is-active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+      margin-bottom: var(--space-xl);
+    }
+
+    .section-header h2 {
+      font-size: var(--font-size-2xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    [data-theme="dark"] .section-header h2 {
+      color: var(--color-primary-light);
+    }
+
+    /* ==========================================
+       LOGIN FORM
+       ========================================== */
+    .login-container {
+      max-width: 480px;
+      margin: 10vh auto;
+      background: var(--color-surface);
+      padding: var(--space-2xl);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-xl);
+      text-align: center;
+      border: 1px solid var(--color-border);
+    }
+
+    .login-container h1 {
+      font-size: var(--font-size-2xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .login-container__badge {
+      display: inline-block;
+      background: var(--color-danger);
+      color: white;
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: 4px;
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin: var(--space-lg) 0;
+    }
+
+    /* ==========================================
+       FORM ELEMENTS
+       ========================================== */
+    .form-group {
+      margin-bottom: var(--space-lg);
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: var(--space-sm);
+      font-weight: 500;
+      color: var(--color-text);
+      font-size: var(--font-size-sm);
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: var(--space-md);
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--border-radius);
+      font-size: var(--font-size-base);
+      font-family: inherit;
+      color: var(--color-text);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--color-primary-light);
+      box-shadow: 0 0 0 3px rgba(0, 85, 179, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    .form-input--code {
+      text-align: center;
+      letter-spacing: 3px;
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 150px;
+      line-height: 1.6;
+    }
+
+    /* Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-xl);
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+    }
+
+    .btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 85, 179, 0.3);
+    }
+
+    .btn--primary {
+      background: var(--color-primary);
+      color: white;
+      width: 100%;
+    }
+
+    .btn--primary:hover {
+      background: var(--color-primary-light);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn--secondary {
+      background: var(--color-surface);
+      color: var(--color-primary);
+      border: 2px solid var(--color-primary);
+    }
+
+    .btn--secondary:hover {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .btn--danger {
+      background: var(--color-danger);
+      color: white;
+    }
+
+    .btn--danger:hover {
+      background: #b91c1c;
+    }
+
+    .btn--small {
+      padding: var(--space-sm) var(--space-md);
+      font-size: var(--font-size-sm);
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      margin: var(--space-lg) 0;
+    }
+
+    .btn-group .btn {
+      width: auto;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    /* Alert Messages */
+    .alert {
+      padding: var(--space-md);
+      border-radius: var(--border-radius);
+      margin-top: var(--space-md);
+      font-weight: 600;
+      display: none;
+      animation: slideIn var(--transition-fast);
+    }
+
+    .alert.is-visible {
+      display: block;
+    }
+
+    .alert--error {
+      background: #fee2e2;
+      color: var(--color-danger);
+      border: 1px solid #fecaca;
+    }
+
+    .alert--success {
+      background: #d1fae5;
+      color: var(--color-success);
+      border: 1px solid #a7f3d0;
+    }
+
+    [data-theme="dark"] .alert--error {
+      background: rgba(220, 38, 38, 0.2);
+    }
+
+    [data-theme="dark"] .alert--success {
+      background: rgba(5, 150, 105, 0.2);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================
+       PROFILE CARD
+       ========================================== */
+    .profile-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-xl);
+      background: linear-gradient(135deg, var(--color-surface) 0%, #e9f0ff 100%);
+      border: 2px solid var(--color-primary);
+      border-radius: var(--border-radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-xl);
+      box-shadow: var(--shadow-lg);
+    }
+
+    [data-theme="dark"] .profile-card {
+      background: linear-gradient(135deg, var(--color-surface) 0%, #1a2332 100%);
+    }
+
+    .profile-card__section h3 {
+      font-size: var(--font-size-xl);
+      color: var(--color-primary);
+      margin-bottom: var(--space-md);
+    }
+
+    .profile-card__meta {
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-sm);
+      font-size: var(--font-size-base);
+    }
+
+    .profile-card__status {
+      color: var(--color-success);
+      font-weight: 700;
+      font-size: var(--font-size-lg);
+      margin: var(--space-md) 0;
+    }
+
+    .profile-card__quote {
+      font-style: italic;
+      color: var(--color-text-muted);
+      border-left: 3px solid var(--color-primary);
+      padding-left: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    /* ==========================================
+       ARCHIVE GRID
+       ========================================== */
+    .archive-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-lg);
+      margin: var(--space-xl) 0;
+    }
+
+    .archive-card {
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius-lg);
+      padding: var(--space-xl);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .archive-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 100%);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .archive-card:hover,
+    .archive-card:focus {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+      outline: none;
+    }
+
+    .archive-card:hover::before,
+    .archive-card:focus::before {
+      opacity: 1;
+    }
+
+    .archive-card h3 {
+      font-size: var(--font-size-xl);
+      margin-bottom: var(--space-md);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .archive-card p {
+      opacity: 0.9;
+      line-height: 1.5;
+    }
+
+    .archive-card__count {
+      margin-top: var(--space-lg);
+      font-weight: 700;
+      font-size: var(--font-size-sm);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Archive Detail View */
+    .archive-detail {
+      display: none;
+      animation: fadeIn var(--transition-base);
+    }
+
+    .archive-detail.is-visible {
+      display: block;
+    }
+
+    .sub-item {
+      background: linear-gradient(135deg, var(--color-primary-light) 0%, #2196f3 100%);
+      color: white;
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      transition: transform var(--transition-fast);
+    }
+
+    .sub-item:hover {
+      transform: translateX(8px);
+    }
+
+    .sub-item__title {
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .sub-item__date {
+      font-size: var(--font-size-sm);
+      opacity: 0.8;
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* ==========================================
+       ADMIN PANEL
+       ========================================== */
+    .admin-section {
+      margin: var(--space-xl) 0;
+      padding-top: var(--space-xl);
+      border-top: 2px solid var(--color-border);
+    }
+
+    .admin-section__title {
+      font-size: var(--font-size-lg);
+      color: var(--color-primary);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* ==========================================
+       RESPONSIVE DESIGN
+       ========================================== */
+    @media (max-width: 1024px) {
+      .profile-card {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-width: 100%;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+
+      .sidebar.is-open ~ .main {
+        margin-left: 0;
+      }
+
+      .header {
+        padding: 0 var(--space-md);
+      }
+
+      .header__brand {
+        font-size: var(--font-size-base);
+      }
+
+      .header__meta {
+        gap: var(--space-md);
+      }
+
+      .header__meta span:not(.header__time) {
+        display: none;
+      }
+
+      .content {
+        padding: var(--space-md);
+      }
+
+      .login-container {
+        margin: 5vh var(--space-md);
+        padding: var(--space-xl);
+      }
+
+      .archive-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .btn-group {
+        flex-direction: column;
+      }
+
+      .btn-group .btn {
+        width: 100%;
+      }
+    }
+
+    /* ==========================================
+       ACCESSIBILITY
+       ========================================== */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--color-primary-light);
+      outline-offset: 2px;
+    }
+
+    /* Print Styles */
+    @media print {
+      .sidebar,
+      .header,
+      .theme-toggle,
+      .menu-toggle,
+      .btn {
+        display: none !important;
+      }
+
+      .content {
+        display: block !important;
+        padding: 0;
+      }
+
+      .profile-card,
+      .archive-card,
+      .sub-item {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar" aria-label="Personel Menüsü">
+      <h2 class="sidebar__title">Personel Menüsü</h2>
+      <ul class="sidebar__nav" role="menubar">
+        <li role="none">
+          <button class="sidebar__link is-active" onclick="showSection('dashboard')" role="menuitem" aria-current="page">
+            <i class="fas fa-home" aria-hidden="true"></i>
+            <span>Ana Panel</span>
+          </button>
+        </li>
+        <li role="none">
+          <button class="sidebar__link" onclick="showSection('mit-arsivi')" role="menuitem">
+            <i class="fas fa-archive" aria-hidden="true"></i>
+            <span>MİT'in Arşivi</span>
+          </button>
+        </li>
+        <li role="none">
+          <button class="sidebar__link" onclick="showSection('rapor')" role="menuitem">
+            <i class="fas fa-file-alt" aria-hidden="true"></i>
+            <span>Rapor Yaz</span>
+          </button>
+        </li>
+        <li role="none">
+          <button class="sidebar__link" onclick="showSection('duyurular')" role="menuitem">
+            <i class="fas fa-bullhorn" aria-hidden="true"></i>
+            <span>Personel Bilgilendirme</span>
+          </button>
+        </li>
+        <li role="none" id="admin-menu-item" style="display: none;">
+          <button class="sidebar__link" onclick="showSection('yonetici-paneli')" role="menuitem">
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>
+            <span>Yönetici Paneli</span>
+          </button>
+        </li>
+        <li role="none">
+          <button class="sidebar__link" onclick="cikisYap()" role="menuitem">
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+            <span>Çıkış Yap</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Header -->
+      <header class="header">
+        <div style="display: flex; align-items: center;">
+          <button class="menu-toggle" id="menu-toggle" aria-label="Menüyü Aç/Kapat" aria-expanded="false" aria-controls="sidebar">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+          </button>
+          <span class="header__brand">Millî İstihbarat Teşkilatı</span>
+        </div>
+        <div class="header__meta">
+          <span>TERMINAL</span>
+          <time class="header__time" id="current-time" aria-live="polite">00:00:00</time>
+          <span>SEVİYE <span id="user-level">4</span></span>
+          <button class="theme-toggle" id="theme-toggle" aria-label="Koyu modu aç/kapat">
+            <i class="fas fa-moon" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Login Screen -->
+      <section class="login-container" id="giris" aria-labelledby="login-heading">
+        <h1 id="login-heading">Personel Girişi</h1>
+        <span class="login-container__badge">GİZLİLİK DERECESİ: ÇOK GİZLİ</span>
+        
+        <form id="login-form" onsubmit="event.preventDefault(); girisYap();">
+          <div class="form-group">
+            <label for="access-password" class="sr-only">Personel Kodu</label>
+            <input 
+              type="password" 
+              id="access-password" 
+              class="form-input form-input--code" 
+              placeholder="PERSONEL KODU" 
+              autocomplete="off" 
+              aria-required="true"
+              aria-describedby="password-error"
+              maxlength="20"
+            >
+          </div>
+          
+          <button type="submit" class="btn btn--primary">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            Giriş Yap
+          </button>
+          
+          <div id="password-error" class="alert alert--error" role="alert" aria-live="assertive"></div>
+        </form>
+      </section>
+
+      <!-- Dashboard Panel -->
+      <div id="panel" style="display: none;" aria-live="polite">
+        
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content is-active" aria-labelledby="dashboard-heading">
+          <header class="section-header">
+            <h2 id="dashboard-heading">Ana Panel</h2>
+            <p class="text-muted">Personel bilgileri ve aktif görev durumu</p>
+          </header>
+
+          <article class="profile-card">
+            <div class="profile-card__section">
+              <h3 id="giris-yapan-isim">---</h3>
+              <p class="profile-card__meta" id="giris-yapan-birim">Birim: ---</p>
+              <p class="profile-card__meta" id="giris-yapan-rutbe">Rütbe: ---</p>
+            </div>
+            <div class="profile-card__section">
+              <p><strong>Aktif Görev:</strong></p>
+              <p class="profile-card__status">Bölge Takibi ve Analizi (Aktif)</p>
+              <blockquote class="profile-card__quote">
+                "Görülmeyeni görür, duyulmayanı duyarız"
+              </blockquote>
+            </div>
+          </article>
+        </section>
+
+        <!-- Archive Section -->
+        <section id="mit-arsivi" class="content" aria-labelledby="archive-heading">
+          <header class="section-header">
+            <h2 id="archive-heading">MİT'in Arşivi</h2>
+            <p class="text-muted">Kişi ve organizasyonlara ait istihbarat kayıtları, suç/hata dosyaları</p>
+          </header>
+
+          <div class="archive-grid" id="arsiv-grid" role="list" aria-label="Arşiv Kategorileri"></div>
+          
+          <div id="arsiv-detay" class="archive-detail" aria-live="polite">
+            <!-- Dynamic content -->
+          </div>
+        </section>
+
+        <!-- Report Section -->
+        <section id="rapor" class="content" aria-labelledby="report-heading">
+          <header class="section-header">
+            <h2 id="report-heading">Rapor Yaz</h2>
+            <p class="text-muted">Operasyon ve istihbarat raporlarınızı merkeze iletin</p>
+          </header>
+
+          <form id="report-form" onsubmit="event.preventDefault(); gonderRapor();">
+            <div class="form-group">
+              <label for="status" class="form-label">Durum</label>
+              <select id="status" class="form-select" required>
+                <option value="">Durum Seçin</option>
+                <option value="aktif">Aktif</option>
+                <option value="tamamlandi">Tamamlandı</option>
+                <option value="acil">Acil</option>
+              </select>
+            </div>
+
+            <div class="btn-group" role="group" aria-label="Rapor Şablonları">
+              <button type="button" class="btn btn--secondary btn--small" onclick="sablonDoldur('kisi')">
+                <i class="fas fa-user-secret" aria-hidden="true"></i>
+                Kişi Takip
+              </button>
+              <button type="button" class="btn btn--secondary btn--small" onclick="sablonDoldur('operasyon')">
+                <i class="fas fa-crosshairs" aria-hidden="true"></i>
+                Operasyon
+              </button>
+              <button type="button" class="btn btn--secondary btn--small" onclick="sablonDoldur('acil')">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                Acil Durum
+              </button>
+            </div>
+
+            <div class="form-group">
+              <label for="report-text" class="form-label">Rapor İçeriği</label>
+              <textarea 
+                id="report-text" 
+                class="form-textarea" 
+                placeholder="Rapor içeriğini buraya yazın..." 
+                required
+                aria-required="true"
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn btn--primary">
+              <i class="fas fa-paper-plane" aria-hidden="true"></i>
+              Raporu Merkeze Gönder
+            </button>
+            
+            <div id="raporSuccess" class="alert alert--success" role="status" aria-live="polite">
+              <i class="fas fa-check-circle" aria-hidden="true"></i>
+              Rapor başarıyla Discord kanalına iletildi
+            </div>
+          </form>
+        </section>
+
+        <!-- Announcements Section -->
+        <section id="duyurular" class="content" aria-labelledby="announcements-heading">
+          <header class="section-header">
+            <h2 id="announcements-heading">Personel Bilgilendirme</h2>
+          </header>
+          
+          <div class="text-center" style="max-width: 600px; margin: var(--space-2xl) auto;">
+            <i class="fab fa-discord" style="font-size: 4rem; color: #5865F2; margin-bottom: var(--space-lg);"></i>
+            <p class="mb-lg">Duyurular ve güncellemeler Discord sunucumuzda paylaşılmaktadır.</p>
+            <a href="https://discord.gg/a6XbjtkR" target="_blank" rel="noopener noreferrer" class="btn btn--primary" style="max-width: 300px;">
+              <i class="fab fa-discord" aria-hidden="true"></i>
+              Discord'a Git
+            </a>
+          </div>
+        </section>
+
+        <!-- Admin Panel Section -->
+        <section id="yonetici-paneli" class="content" aria-labelledby="admin-heading">
+          <header class="section-header">
+            <h2 id="admin-heading">Yönetici Paneli</h2>
+            <p class="text-muted">Sistem yönetimi ve arşiv kontrolü</p>
+          </header>
+
+          <!-- Send Announcement -->
+          <div class="admin-section">
+            <h3 class="admin-section__title">
+              <i class="fas fa-broadcast-tower" aria-hidden="true"></i>
+              Duyuru Gönder (Tüm Personele)
+            </h3>
+            <form onsubmit="event.preventDefault(); gonderDuyuru();">
+              <div class="form-group">
+                <label for="duyuru-baslik" class="form-label">Duyuru Başlığı</label>
+                <input type="text" id="duyuru-baslik" class="form-input" placeholder="Duyuru başlığını girin" required>
+              </div>
+              <div class="form-group">
+                <label for="duyuru-icerik" class="form-label">Duyuru Metni</label>
+                <textarea id="duyuru-icerik" class="form-textarea" rows="4" placeholder="Duyuru içeriğini yazın..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                Duyuruyu Gönder
+              </button>
+              <div id="duyuruSuccess" class="alert alert--success" role="status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                Duyuru başarıyla Discord'a iletildi
+              </div>
+            </form>
+          </div>
+
+          <!-- Add Category -->
+          <div class="admin-section">
+            <h3 class="admin-section__title">
+              <i class="fas fa-folder-plus" aria-hidden="true"></i>
+              Yeni Kategori Ekle
+            </h3>
+            <form onsubmit="event.preventDefault(); kategoriEkle();">
+              <div class="form-group">
+                <label for="kategori-baslik" class="form-label">Kategori Adı</label>
+                <input type="text" id="kategori-baslik" class="form-input" placeholder="Örn: Emniyet Personeli" required>
+              </div>
+              <div class="form-group">
+                <label for="kategori-aciklama" class="form-label">Açıklama</label>
+                <textarea id="kategori-aciklama" class="form-textarea" rows="2" placeholder="Kısa açıklama..."></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                Kategori Ekle
+              </button>
+              <div id="kategoriSuccess" class="alert alert--success" role="status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                Kategori başarıyla eklendi
+              </div>
+            </form>
+          </div>
+
+          <!-- Remove Category -->
+          <div class="admin-section">
+            <h3 class="admin-section__title">
+              <i class="fas fa-folder-minus" aria-hidden="true"></i>
+              Kategori Kaldır
+            </h3>
+            <form onsubmit="event.preventDefault(); kategoriKaldir();">
+              <div class="form-group">
+                <label for="kaldir-kategori" class="form-label">Kategori Seç</label>
+                <select id="kaldir-kategori" class="form-select" required>
+                  <option value="">Kategori seçin...</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn--danger">
+                <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                Kategoriyi Kaldır
+              </button>
+              <div id="kaldirSuccess" class="alert alert--success" role="status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                Kategori kaldırıldı
+              </div>
+            </form>
+          </div>
+
+          <!-- Add Sub-item -->
+          <div class="admin-section">
+            <h3 class="admin-section__title">
+              <i class="fas fa-file-medical" aria-hidden="true"></i>
+              Alt Konu / Rapor Ekle
+            </h3>
+            <form onsubmit="event.preventDefault(); altKonuEkle();">
+              <div class="form-group">
+                <label for="alt-ekle-kategori" class="form-label">Kategori Seç</label>
+                <select id="alt-ekle-kategori" class="form-select" required>
+                  <option value="">Kategori seçin...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="alt-baslik" class="form-label">Başlık</label>
+                <input type="text" id="alt-baslik" class="form-input" placeholder="Alt konu başlığı" required>
+              </div>
+              <div class="form-group">
+                <label for="alt-detay" class="form-label">Detay</label>
+                <textarea id="alt-detay" class="form-textarea" rows="3" placeholder="Detaylı bilgi..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="alt-tarih" class="form-label">Tarih</label>
+                <input type="text" id="alt-tarih" class="form-input" placeholder="15 Ocak 2026" value="">
+              </div>
+              <button type="submit" class="btn btn--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                Alt Konu Ekle
+              </button>
+              <div id="altSuccess" class="alert alert--success" role="status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                Alt konu eklendi
+              </div>
+            </form>
+          </div>
+
+          <!-- Remove Sub-item -->
+          <div class="admin-section">
+            <h3 class="admin-section__title">
+              <i class="fas fa-file-excel" aria-hidden="true"></i>
+              Alt Konu / Rapor Kaldır
+            </h3>
+            <form onsubmit="event.preventDefault(); altKonuKaldir();">
+              <div class="form-group">
+                <label for="alt-kaldir-kategori" class="form-label">Kategori Seç</label>
+                <select id="alt-kaldir-kategori" class="form-select" onchange="updateAltKaldirSelect()" required>
+                  <option value="">Kategori seçin...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="alt-kaldir-item" class="form-label">Alt Konu Seç</label>
+                <select id="alt-kaldir-item" class="form-select" required>
+                  <option value="">Önce kategori seçin...</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn--danger">
+                <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                Seçili Raporu Kaldır
+              </button>
+              <div id="altKaldirSuccess" class="alert alert--success" role="status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                Rapor kaldırıldı
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    /**
+     * MİT Personel Uygulaması - Ana JavaScript
+     * @version 2.0.0
+     * @author Profesyonel Düzenleme
+     */
+
+    'use strict';
+
+    // ==========================================
+    // CONFIGURATION & CONSTANTS
+    // ==========================================
+    
+    const CONFIG = {
+      COOLDOWN_SECONDS: 300,
+      STORAGE_KEY: 'mit_arsiv_kategoriler',
+      WEBHOOK_RAPOR: 'https://discord.com/api/webhooks/1457829355358261615/-uOZYjIN03dbE01uasvp0QK2bxujojEShfhrQX-bEAPFwpCebn9TdJYMgBipfMFf-3nX',
+      WEBHOOK_DUYURU: 'https://discord.com/api/webhooks/1457829359250440326/NVcJMDNV4gZgYrtiB0JtxnfflbBJFJwIEV3RXNUbE37Glq94h8dV6wEoREySBJ4gsfI_',
+      MAX_MESSAGE_LENGTH: 2000
+    };
+
+    // ==========================================
+    // PERSONNEL DATA
+    // ==========================================
+    
+    const PERSONNEL = Object.freeze([
+      { code: 'MIT2026CCCC1965', codename: 'KORKUT', rank: 'DevletMemuru', level: 5, isAdmin: true, unit: 'MIT' },
+      { code: 'MIT2026CCCC1453', codename: 'BATUHAN', rank: 'Başkan', level: 5, isAdmin: true, unit: 'MIT' },
+      { code: 'MIT2026CCCC0033', codename: 'ATA', rank: 'Yardımcı Başkanı', level: 5, isAdmin: true, unit: 'MIT' },
+      { code: 'MIT2026CCCC0044', codename: 'Personel-1', rank: 'GÖREVİ', level: 4, isAdmin: false, unit: 'MIT' },
+      { code: 'MIT2026BBBB1155', codename: 'Personel-2', rank: 'GÖREVİ', level: 4, isAdmin: false, unit: 'MIT' },
+      { code: 'MIT2026BBBB2266', codename: 'Personel-3', rank: 'GÖREVİ', level: 4, isAdmin: false, unit: 'MIT' },
+      { code: 'MIT2026BBBB3377', codename: 'Personel-4', rank: 'GÖREVİ', level: 3, isAdmin: false, unit: 'MIT' },
+      { code: 'EGM2026EEEE0155', codename: 'Personel-5', rank: 'GÖREVİ', level: 3, isAdmin: false, unit: 'EGM' },
+      { code: 'EGM2026EEEE1122', codename: 'Personel-6', rank: 'GÖREVİ', level: 4, isAdmin: false, unit: 'EGM' },
+      { code: 'MIT2026EEEE0212', codename: 'Personel-7', rank: 'GÖREVİ', level: 3, isAdmin: false, unit: 'MIT' },
+      { code: 'MIT2026EEEE3434', codename: 'Personel-8', rank: 'GÖREVİ', level: 4, isAdmin: false, unit: 'MIT' }
+    ]);
+
+    // ==========================================
+    // STATE MANAGEMENT
+    // ==========================================
+    
+    const state = {
+      currentUser: null,
+      isAdmin: false,
+      lastReportTime: {},
+      lastDuyuruTime: {},
+      archiveData: []
+    };
+
+    // ==========================================
+    // UTILITY FUNCTIONS
+    // ==========================================
+    
+    const Utils = {
+      /**
+       * XSS koruması için HTML escape
+       */
+      escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      },
+
+      /**
+       * Tarih formatla
+       */
+      formatDate(date = new Date()) {
+        return date.toLocaleDateString('tr-TR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      },
+
+      /**
+       * Zaman formatla
+       */
+      formatTime(date = new Date()) {
+        return date.toLocaleTimeString('tr-TR', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      },
+
+      /**
+       * Cooldown kontrolü
+       */
+      checkCooldown(lastTime, cooldownSeconds = CONFIG.COOLDOWN_SECONDS) {
+        const now = Date.now();
+        if (lastTime && now - lastTime < cooldownSeconds * 1000) {
+          const remaining = Math.ceil((cooldownSeconds * 1000 - (now - lastTime)) / 1000);
+          return { allowed: false, remaining };
+        }
+        return { allowed: true, remaining: 0 };
+      },
+
+      /**
+       * LocalStorage güvenli erişim
+       */
+      storage: {
+        get(key) {
+          try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+          } catch (e) {
+            console.error('Storage get error:', e);
+            return null;
+          }
+        },
+        set(key, value) {
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+          } catch (e) {
+            console.error('Storage set error:', e);
+            return false;
+          }
+        }
+      },
+
+      /**
+       * Bildirim göster
+       */
+      showAlert(elementId, message = null, type = 'success', duration = 3000) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+
+        if (message) {
+          element.textContent = message;
+        }
+        
+        element.classList.add('is-visible');
+        
+        if (duration > 0) {
+          setTimeout(() => {
+            element.classList.remove('is-visible');
+          }, duration);
+        }
+      },
+
+      /**
+       * Form elemanlarını temizle
+       */
+      clearForm(...elementIds) {
+        elementIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+      }
+    };
+
+    // ==========================================
+    // ARCHIVE MANAGEMENT
+    // ==========================================
+    
+    const ArchiveManager = {
+      init() {
+        const saved = Utils.storage.get(CONFIG.STORAGE_KEY);
+        if (saved && Array.isArray(saved)) {
+          state.archiveData = saved;
+        } else {
+          // Default data
+          state.archiveData = [
+            { 
+              id: '1', 
+              title: 'Emniyet Personeli', 
+              description: 'Emniyet teşkilatındaki şüpheli hareketler ve bağlantılar', 
+              items: [] 
+            },
+            { 
+              id: '2', 
+              title: 'Yargı Mensupları', 
+              description: 'Hâkim, savcı ve adli personel dosyaları', 
+              items: [] 
+            }
+          ];
+          this.save();
+        }
+      },
+
+      save() {
+        Utils.storage.set(CONFIG.STORAGE_KEY, state.archiveData);
+      },
+
+      addCategory(title, description) {
+        const newCategory = {
+          id: Date.now().toString(),
+          title: Utils.escapeHtml(title),
+          description: Utils.escapeHtml(description),
+          items: []
+        };
+        state.archiveData.push(newCategory);
+        this.save();
+        return newCategory;
+      },
+
+      removeCategory(id) {
+        state.archiveData = state.archiveData.filter(cat => cat.id !== id);
+        this.save();
+      },
+
+      addItem(categoryId, title, detail, date) {
+        const category = state.archiveData.find(cat => cat.id === categoryId);
+        if (category) {
+          category.items.push({
+            title: Utils.escapeHtml(title),
+            detail: Utils.escapeHtml(detail),
+            date: date || Utils.formatDate()
+          });
+          this.save();
+          return true;
+        }
+        return false;
+      },
+
+      removeItem(categoryId, itemIndex) {
+        const category = state.archiveData.find(cat => cat.id === categoryId);
+        if (category && category.items[itemIndex]) {
+          category.items.splice(itemIndex, 1);
+          this.save();
+          return true;
+        }
+        return false;
+      }
+    };
+
+    // ==========================================
+    // UI FUNCTIONS
+    // ==========================================
+    
+    const UI = {
+      /**
+       * Bölüm göster/gizle
+       */
+      showSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.content').forEach(el => {
+          el.classList.remove('is-active');
+          el.hidden = true;
+        });
+        
+        // Show target section
+        const target = document.getElementById(sectionId);
+        if (target) {
+          target.classList.add('is-active');
+          target.hidden = false;
+        }
+
+        // Update sidebar active state
+        document.querySelectorAll('.sidebar__link').forEach(btn => {
+          btn.classList.remove('is-active');
+          btn.removeAttribute('aria-current');
+        });
+        
+        const activeBtn = document.querySelector(`button[onclick="showSection('${sectionId}')"]`);
+        if (activeBtn) {
+          activeBtn.classList.add('is-active');
+          activeBtn.setAttribute('aria-current', 'page');
+        }
+
+        // Close sidebar on mobile after selection
+        if (window.innerWidth <= 768) {
+          document.getElementById('sidebar').classList.remove('is-open');
+          document.getElementById('menu-toggle').setAttribute('aria-expanded', 'false');
+        }
+
+        // Refresh archive if needed
+        if (sectionId === 'mit-arsivi') {
+          this.renderArchive();
+        }
+      },
+
+      /**
+       * Arşivi render et
+       */
+      renderArchive() {
+        const grid = document.getElementById('arsiv-grid');
+        if (!grid) return;
+
+        grid.innerHTML = state.archiveData.map(category => `
+          <article class="archive-card" 
+                   onclick="UI.openCategory('${category.id}')"
+                   onkeypress="if(event.key==='Enter')UI.openCategory('${category.id}')"
+                   tabindex="0"
+                   role="listitem"
+                   aria-label="${category.title} - ${category.items.length} kayıt">
+            <h3>
+              <i class="fas fa-folder" aria-hidden="true"></i>
+              ${category.title}
+            </h3>
+            <p>${category.description}</p>
+            <div class="archive-card__count">
+              <i class="fas fa-file-alt" aria-hidden="true"></i>
+              ${category.items.length} Kayıt
+            </div>
+          </article>
+        `).join('');
+
+        this.updateAdminDropdowns();
+      },
+
+      /**
+       * Kategori detayını aç
+       */
+      openCategory(categoryId) {
+        const category = state.archiveData.find(cat => cat.id === categoryId);
+        if (!category) return;
+
+        const grid = document.getElementById('arsiv-grid');
+        const detail = document.getElementById('arsiv-detay');
+
+        grid.style.display = 'none';
+        detail.classList.add('is-visible');
+        
+        const itemsHtml = category.items.length === 0 
+          ? '<p class="text-muted">Henüz kayıt bulunmamaktadır.</p>'
+          : category.items.map((item, index) => `
+              <article class="sub-item">
+                <div class="sub-item__title">
+                  ${item.title}
+                  <time class="sub-item__date">${item.date}</time>
+                </div>
+                <p>${item.detail}</p>
+              </article>
+            `).join('');
+
+        detail.innerHTML = `
+          <button class="btn btn--secondary btn--small mb-lg" onclick="UI.closeCategory()">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            Geri Dön
+          </button>
+          <h3 class="mb-md">${category.title}</h3>
+          <p class="text-muted mb-lg">${category.description}</p>
+          <h4 class="mb-md">Kayıtlar:</h4>
+          ${itemsHtml}
+        `;
+      },
+
+      /**
+       * Kategori detayını kapat
+       */
+      closeCategory() {
+        document.getElementById('arsiv-grid').style.display = 'grid';
+        document.getElementById('arsiv-detay').classList.remove('is-visible');
+      },
+
+      /**
+       * Admin dropdownlarını güncelle
+       */
+      updateAdminDropdowns() {
+        const selects = [
+          'kaldir-kategori',
+          'alt-ekle-kategori', 
+          'alt-kaldir-kategori'
+        ];
+
+        selects.forEach(selectId => {
+          const select = document.getElementById(selectId);
+          if (!select) return;
+
+          const currentValue = select.value;
+          select.innerHTML = '<option value="">Kategori seçin...</option>';
+          
+          state.archiveData.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.title;
+            select.appendChild(option);
+          });
+
+          if (currentValue) select.value = currentValue;
+        });
+      },
+
+      /**
+       * Alt kategori dropdownunu güncelle
+       */
+      updateSubItemDropdown() {
+        const categorySelect = document.getElementById('alt-kaldir-kategori');
+        const itemSelect = document.getElementById('alt-kaldir-item');
+        
+        if (!categorySelect || !itemSelect) return;
+
+        const categoryId = categorySelect.value;
+        itemSelect.innerHTML = '<option value="">Alt konu seçin...</option>';
+
+        if (!categoryId) return;
+
+        const category = state.archiveData.find(cat => cat.id === categoryId);
+        if (category && category.items) {
+          category.items.forEach((item, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = item.title;
+            itemSelect.appendChild(option);
+          });
+        }
+      },
+
+      /**
+       * Tema değiştir
+       */
+      toggleTheme() {
+        const body = document.body;
+        const isDark = body.getAttribute('data-theme') === 'dark';
+        const icon = document.querySelector('#theme-toggle i');
+        
+        if (isDark) {
+          body.removeAttribute('data-theme');
+          icon.classList.remove('fa-sun');
+          icon.classList.add('fa-moon');
+          localStorage.setItem('theme', 'light');
+        } else {
+          body.setAttribute('data-theme', 'dark');
+          icon.classList.remove('fa-moon');
+          icon.classList.add('fa-sun');
+          localStorage.setItem('theme', 'dark');
+        }
+      },
+
+      /**
+       * Mobil menüyü aç/kapat
+       */
+      toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('menu-toggle');
+        const isOpen = sidebar.classList.toggle('is-open');
+        
+        toggle.setAttribute('aria-expanded', isOpen);
+      },
+
+      /**
+       * Saat güncelle
+       */
+      updateClock() {
+        const timeElement = document.getElementById('current-time');
+        if (timeElement) {
+          timeElement.textContent = Utils.formatTime();
+        }
+      }
+    };
+
+    // ==========================================
+    // AUTHENTICATION
+    // ==========================================
+    
+    function girisYap() {
+      const passwordInput = document.getElementById('access-password');
+      const errorElement = document.getElementById('password-error');
+      const password = passwordInput.value.trim();
+
+      // Reset error
+      errorElement.classList.remove('is-visible');
+      errorElement.textContent = '';
+
+      // Validation
+      if (!password) {
+        errorElement.textContent = '× PERSONEL KODU GİRMEDİNİZ ×';
+        errorElement.classList.add('is-visible');
+        passwordInput.focus();
+        return;
+      }
+
+      // Find user
+      const user = PERSONNEL.find(p => p.code === password);
+      
+      if (!user) {
+        errorElement.textContent = '× GEÇERSİZ PERSONEL KODU – MERKEZE BİLDİRİLDİ ×';
+        errorElement.classList.add('is-visible');
+        passwordInput.value = '';
+        passwordInput.focus();
+        return;
+      }
+
+      // Set state
+      state.currentUser = user;
+      state.isAdmin = user.isAdmin;
+
+      // Update UI
+      document.getElementById('giris-yapan-isim').textContent = user.codename;
+      document.getElementById('giris-yapan-birim').textContent = `Birim: ${user.unit === 'EGM' ? 'Emniyet Teşkilatı' : 'Millî İstihbarat Teşkilatı'}`;
+      document.getElementById('giris-yapan-rutbe').textContent = `Rütbe: ${user.rank}`;
+      document.getElementById('user-level').textContent = user.level;
+
+      // Show admin menu if applicable
+      const adminMenu = document.getElementById('admin-menu-item');
+      if (adminMenu) {
+        adminMenu.style.display = user.isAdmin ? 'block' : 'none';
+      }
+
+      // Switch views
+      document.getElementById('giris').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      document.getElementById('sidebar').classList.add('is-open');
+      
+      // Show dashboard
+      UI.showSection('dashboard');
+    }
+
+    function cikisYap() {
+      if (!confirm('Çıkış yapmak istediğinizden emin misiniz?')) return;
+
+      // Reset state
+      state.currentUser = null;
+      state.isAdmin = false;
+
+      // Reset UI
+      document.getElementById('admin-menu-item').style.display = 'none';
+      document.getElementById('panel').style.display = 'none';
+      document.getElementById('giris').style.display = 'block';
+      document.getElementById('sidebar').classList.remove('is-open');
+      document.getElementById('access-password').value = '';
+      document.getElementById('access-password').focus();
+    }
+
+    // ==========================================
+    // REPORTING FUNCTIONS
+    // ==========================================
+    
+    async function gonderRapor() {
+      if (!state.currentUser) return;
+
+      const cooldown = Utils.checkCooldown(state.lastReportTime[state.currentUser.code]);
+      if (!cooldown.allowed) {
+        alert(`Spam koruması aktif! Lütfen ${cooldown.remaining} saniye bekleyin.`);
+        return;
+      }
+
+      const text = document.getElementById('report-text').value.trim();
+      if (!text) {
+        alert('Rapor içeriği boş olamaz!');
+        return;
+      }
+
+      const status = document.getElementById('status').value;
+      const user = state.currentUser;
+
+      const payload = {
+        content: '<@&1452782503759843482>',
+        embeds: [{
+          title: `📤 Yeni Rapor - ${user.codename} (${user.rank})`,
+          description: `\`\`\`${text.substring(0, CONFIG.MAX_MESSAGE_LENGTH)}\`\`\``,
+          color: 3447003,
+          fields: [
+            { name: 'Durum', value: status || 'Belirtilmemiş', inline: true },
+            { name: 'Birim', value: user.unit, inline: true },
+            { name: 'Seviye', value: user.level.toString(), inline: true }
+          ],
+          timestamp: new Date().toISOString(),
+          footer: { 
+            text: `MİT Güvenli Terminal • ${Utils.formatDate()} ${Utils.formatTime()}` 
+          }
+        }]
+      };
+
+      try {
+        const response = await fetch(CONFIG.WEBHOOK_RAPOR, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          state.lastReportTime[user.code] = Date.now();
+          Utils.showAlert('raporSuccess');
+          Utils.clearForm('report-text', 'status');
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        alert('Rapor gönderilemedi: ' + error.message);
+      }
+    }
+
+    function sablonDoldur(type) {
+      const textarea = document.getElementById('report-text');
+      const date = Utils.formatDate();
+      const user = state.currentUser;
+      
+      let template = `Tarih: ${date}\nGönderen: ${user?.codename || 'Bilinmeyen'}\nBirim: ${user?.unit || '---'}\n\n`;
+      
+      const templates = {
+        kisi: `KİŞİ TAKİP RAPORU\nHedef: \nSon Konum: \nGözlem Notları: \nRisk Seviyesi: `,
+        operasyon: `OPERASYON RAPORU\nOperasyon Kodu: \nBölge: \nSonuç: \nToplanan Veri: \nTahmini Risk: `,
+        acil: `⚠️ ACİL DURUM RAPORU ⚠️\nTehdit Seviyesi: \nKonum: \nDurum Açıklaması: \nİhtiyaç: `
+      };
+
+      textarea.value = template + (templates[type] || '');
+      textarea.focus();
+    }
+
+    // ==========================================
+    // ANNOUNCEMENT FUNCTIONS
+    // ==========================================
+    
+    async function gonderDuyuru() {
+      if (!state.isAdmin) {
+        alert('Sadece yöneticiler duyuru gönderebilir!');
+        return;
+      }
+
+      const cooldown = Utils.checkCooldown(state.lastDuyuruTime[state.currentUser.code]);
+      if (!cooldown.allowed) {
+        alert(`Spam koruması aktif! Lütfen ${cooldown.remaining} saniye bekleyin.`);
+        return;
+      }
+
+      const title = document.getElementById('duyuru-baslik').value.trim();
+      const content = document.getElementById('duyuru-icerik').value.trim();
+
+      if (!title || !content) {
+        alert('Başlık ve içerik zorunludur!');
+        return;
+      }
+
+      const payload = {
+        content: '<@&997276536250056855>',
+        embeds: [{
+          title: `🔔 ${title}`,
+          description: content,
+          color: 15844367,
+          timestamp: new Date().toISOString(),
+          author: { name: `Gönderen: ${state.currentUser.codename}` },
+          footer: { 
+            text: `MİT Personel Duyurusu • ${Utils.formatDate()}` 
+          }
+        }]
+      };
+
+      try {
+        const response = await fetch(CONFIG.WEBHOOK_DUYURU, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          state.lastDuyuruTime[state.currentUser.code] = Date.now();
+          Utils.showAlert('duyuruSuccess');
+          Utils.clearForm('duyuru-baslik', 'duyuru-icerik');
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        alert('Duyuru gönderilemedi: ' + error.message);
+      }
+    }
+
+    // ==========================================
+    // ADMIN FUNCTIONS
+    // ==========================================
+    
+    function kategoriEkle() {
+      if (!state.isAdmin) return;
+
+      const title = document.getElementById('kategori-baslik').value.trim();
+      const description = document.getElementById('kategori-aciklama').value.trim();
+
+      if (!title) {
+        alert('Kategori adı zorunludur!');
+        return;
+      }
+
+      ArchiveManager.addCategory(title, description);
+      UI.renderArchive();
+      Utils.showAlert('kategoriSuccess');
+      Utils.clearForm('kategori-baslik', 'kategori-aciklama');
+    }
+
+    function kategoriKaldir() {
+      if (!state.isAdmin) return;
+
+      const select = document.getElementById('kaldir-kategori');
+      const id = select.value;
+
+      if (!id) {
+        alert('Lütfen bir kategori seçin!');
+        return;
+      }
+
+      if (!confirm('Bu kategori ve içindeki tüm kayıtlar kalıcı olarak silinecek. Emin misiniz?')) {
+        return;
+      }
+
+      ArchiveManager.removeCategory(id);
+      UI.renderArchive();
+      Utils.showAlert('kaldirSuccess');
+      select.value = '';
+    }
+
+    function altKonuEkle() {
+      if (!state.isAdmin) return;
+
+      const categoryId = document.getElementById('alt-ekle-kategori').value;
+      const title = document.getElementById('alt-baslik').value.trim();
+      const detail = document.getElementById('alt-detay').value.trim();
+      const date = document.getElementById('alt-tarih').value.trim() || Utils.formatDate();
+
+      if (!categoryId || !title || !detail) {
+        alert('Kategori, başlık ve detay zorunludur!');
+        return;
+      }
+
+      if (ArchiveManager.addItem(categoryId, title, detail, date)) {
+        UI.renderArchive();
+        Utils.showAlert('altSuccess');
+        Utils.clearForm('alt-baslik', 'alt-detay', 'alt-tarih');
+        document.getElementById('alt-tarih').value = Utils.formatDate();
+      }
+    }
+
+    function altKonuKaldir() {
+      if (!state.isAdmin) return;
+
+      const categoryId = document.getElementById('alt-kaldir-kategori').value;
+      const itemIndex = document.getElementById('alt-kaldir-item').value;
+
+      if (!categoryId || itemIndex === '') {
+        alert('Lütfen kategori ve alt konu seçin!');
+        return;
+      }
+
+      if (!confirm('Bu kaydı kaldırmak istediğinizden emin misiniz?')) return;
+
+      if (ArchiveManager.removeItem(categoryId, parseInt(itemIndex))) {
+        UI.renderArchive();
+        UI.updateSubItemDropdown();
+        Utils.showAlert('altKaldirSuccess');
+      }
+    }
+
+    // Global fonksiyonları window'a ata (HTML onclick'ler için)
+    window.showSection = UI.showSection;
+    window.cikisYap = cikisYap;
+    window.girisYap = girisYap;
+    window.gonderRapor = gonderRapor;
+    window.gonderDuyuru = gonderDuyuru;
+    window.sablonDoldur = sablonDoldur;
+    window.kategoriEkle = kategoriEkle;
+    window.kategoriKaldir = kategoriKaldir;
+    window.altKonuEkle = altKonuEkle;
+    window.altKonuKaldir = altKonuKaldir;
+    window.updateAltKaldirSelect = UI.updateSubItemDropdown;
+
+    // ==========================================
+    // INITIALIZATION
+    // ==========================================
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize archive
+      ArchiveManager.init();
+
+      // Theme initialization
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        const icon = document.querySelector('#theme-toggle i');
+        if (icon) {
+          icon.classList.remove('fa-moon');
+          icon.classList.add('fa-sun');
+        }
+      }
+
+      // Event listeners
+      document.getElementById('theme-toggle').addEventListener('click', UI.toggleTheme);
+      document.getElementById('menu-toggle').addEventListener('click', UI.toggleMenu);
+      
+      // Clock
+      UI.updateClock();
+      setInterval(UI.updateClock, 1000);
+
+      // Enter key support for login
+      document.getElementById('access-password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') girisYap();
+      });
+
+      // Focus login input
+      document.getElementById('access-password').focus();
+
+      // Set default date for sub-item
+      document.getElementById('alt-tarih').value = Utils.formatDate();
+    });
+  </script>
+</body>
+</html>
